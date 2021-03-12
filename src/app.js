@@ -34,15 +34,21 @@ app.put("/repositories/:id", (request, response) => {
   const { id } = request.params;
   const { title, url, techs } = request.body;
 
-  const repositoryIndex = repositories.find(repository => repository.id === id);
+  const findRepositoryIndex = repositories.findIndex(repository => repository.id === id);
 
-  if (!repositoryIndex) {
-    return response.status(400).send;
+  if (findRepositoryIndex === -1) {
+    return response.status(400).json({ error: 'Repository does not exists.' });
   }
 
-  const repository = { id, title, url, techs };
+  const repository = repositories[findRepositoryIndex] = {
+    id,
+    title,
+    url,
+    techs,
+    likes: repositories[findRepositoryIndex].likes,
+  };
 
-  repositories[repositoryIndex] = repository;
+  repositories[findRepositoryIndex] = repository;
 
   return response.json(repository);
 });
@@ -50,13 +56,13 @@ app.put("/repositories/:id", (request, response) => {
 app.delete("/repositories/:id", (request, response) => {
   const { id } = request.params;
 
-  const repositoryIndex = repositories.find(repository => repository.id === id);
+  const findRepositoryIndex = repositories.findIndex(repository => repository.id === id);
 
-  if (!repositoryIndex) {
-    return response.status(400).send();
+  if (findRepositoryIndex >= 0) {
+    repositories.splice(findRepositoryIndex, 1);
+  } else {
+    return response.status(400).json({ error: 'Repository does not exist.' });
   }
-
-  repositories.splice(repositoryIndex, 1)
 
   return response.status(204).send();
 });
@@ -64,16 +70,15 @@ app.delete("/repositories/:id", (request, response) => {
 app.post("/repositories/:id/like", (request, response) => {
   const { id } = request.params;
 
-  const repository = repositories.find(repository => repository.id === id);
+  const findRepositoryIndex = repositories.findIndex(repository => repository.id === id);
 
-  if (!repository) {
-    return response.status(400).send();
+  if (findRepositoryIndex === -1) {
+    return response.status(400).json({ error: 'Repository does not exists.' });
   }
 
-  repository.likes += 1;
+  repositories[findRepositoryIndex].likes++;
 
-
-  return response.json(repository);
+  return response.json(repositories[findRepositoryIndex]); 
 });
 
 module.exports = app;
